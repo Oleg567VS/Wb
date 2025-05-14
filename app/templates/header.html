@@ -1,0 +1,15 @@
+{% load static %}
+<header>
+    <div class = "logo">
+        <a href = "{% url "index" %}">
+            <img src="{% static "img/logoWb.svg" %}" alt="logo">
+        </a>
+    </div>
+    <nav>
+        <div class="nav-links">
+            <div class="nav-link"><a href="nav-link">Каталог</a></div>
+            <div class="nav-link"><a href="nav-link">О нас</a></div>
+            <div class="nav-link"><a href="nav-link">Контакты</a></div>
+        </div>
+    </nav>
+</header>
