@@ -1,22 +1,25 @@
-{% extends "base.html" %}
-
-{% block content %}
-
-<div class="categories">
+{% extends "base.html" %} {% block content %}
+<div class="product-containers">
+  <div class="categories">
     {% for category in categories %}
-    <div class="category">{{ category.name }}</div>
+    <div class="category">{{ category.name }} /</div>
     {% endfor %}
-</div>
-<div class="product-details">
+  </div>
+  <div class="product-details">
     <div class="product-details-image">
-        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+      <img
+        class="images"
+        src="{{ product.image.url }}"
+        alt="{{ product.name }}"
+      />
     </div>
     <div class="product-details-info">
-        <h1>{{ product.name }}</h1>
-        <p>{{ product.description }}</p>
-        <p>{{ product.price }}</p>
+      <h1 class="name-tovar">{{ product.name }}</h1>
+      <p class="desc">{{ product.desc }}</p>
+      <button class="button-price">
+        <p class="prod-price">{{ product.price }}₽</p>
+      </button>
     </div>
-    
+  </div>
 </div>
-
 {% endblock %}
