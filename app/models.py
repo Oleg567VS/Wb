@@ -31,6 +31,10 @@ class Product(models.Model):
         verbose_name="Бренд",
         on_delete=models.CASCADE,
     )
+    
+    slug = models.SlugField(
+        "URL", max_length=250, unique = True, null = True, editable = True
+    )
 
     class Meta:
         verbose_name = "Товар"
@@ -53,6 +57,9 @@ class Category(models.Model):
         blank=True,
     )
 
+    slug = models.SlugField(
+        "URL", max_length=250, unique = True, null = True, editable = True
+    )
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
