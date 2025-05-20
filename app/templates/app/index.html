@@ -1,26 +1,49 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 
-{% block title %}Главная{% endblock %}
+{% block title %}Главная{% endblock %} 
 
 {% block content %}
 <div class="container">
-    <div class="products">
+  <div class="products">
     {% for product in products %}
-        <div class="product-card">
-            <div class="product-img">
-                <img src="{{ product.image.url }}" alt="{{ product.name }}">
-            </div>
-            <p class="product-price">{{ product.price }} ₽</p>
-            <div class="product-info">
-                <p class="product-brand">{{ product.brand.name }}</p>
-                /
-                <p class="product-name">{{ product.name }}</p>
-            </div>
-            <p class="product-category">{{ product.category.name }}</p>
-            <button class="product-button" onclick="window.location.href='{% url 'product_details' product.id %}'">Купить</button>
-        </div>
-    
-    {% endfor %}
+    <div class="product-card">
+      <div class="product-img">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+      </div>
+      <p class="product-price">{{ product.price }} ₽</p>
+      <div class="product-info">
+        <p class="product-brand">{{ product.brand.name }}</p>
+        /
+        <p class="product-name">{{ product.name }}</p>
+      </div>
+      <p class="product-category">{{ product.category.name }}</p>
+      <button
+        class="product-button"
+        onclick="window.location.href='{% url 'product_details' product.id %}'"
+      >
+        Купить
+      </button>
     </div>
+    {% endfor %}
+  </div>
+
+  <!-- Пагинация -->
+  <div class="pagination">
+    <span class="step-links">
+      {% if products.has_previous %}
+        <a href="?page=1" class="page-link">&laquo; Первая</a>
+        <a href="?page={{ products.previous_page_number }}" class="page-link">Предыдущая</a>
+      {% endif %}
+
+      <span class="current-page">
+        Страница {{ products.number }} из {{ products.paginator.num_pages }}
+      </span>
+
+      {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}" class="page-link">Следующая</a>
+        <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
+      {% endif %}
+    </span>
+  </div>
 </div>
 {% endblock %}
