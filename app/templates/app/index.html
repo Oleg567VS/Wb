@@ -1,51 +1,50 @@
 {% extends "base.html" %}
-
 {% block title %}Главная{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="products">
-    {% for product in products %}
-    <div class="product-card">
-      <div class="product-img">
-        <img src="{{ product.image.url }}" alt="{{ product.name }}" />
-      </div>
-      <p class="product-price">{{ product.price }} ₽</p>
-      <div class="product-info">
-        <p class="product-brand">{{ product.brand.name }}</p>
-        /
-        <p class="product-name">{{ product.name }}</p>
-      </div>
-      <p class="product-category">{{ product.category.name }}</p>
-      <button
-        class="product-button"
-        onclick="window.location.href='{% url 'product_details' product.id %}'"
-      >
+<div class="products">
+  {% for product in products %}
+    <div class="product-wrapper">
+      <a href="{% url 'product_details' product.id %}" class="product-card-link">
+        <div class="product-card">
+          <p class="product-category">{{ product.category.name }}</p>
+          <div class="product-img">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+          </div>
+          <p class="product-price">{{ product.price }} ₽</p>
+          <div class="product-info">
+            <p class="product-brand">{{ product.brand.name }}</p>
+            <p class="product-name">{{ product.name }}</p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Кнопка "В корзину" под карточкой -->
+      <a href="{% url 'cart_add' product.id %}" class="product-button">
         В корзину
-      </button>
+      </a>
     </div>
-    {% endfor %}
-  </div>
+  {% endfor %}
+</div>
 
-  <!-- Улучшенная пагинация с номерами страниц -->
-  <div class="pagination">
-    {% if products.has_previous %}
-      <a href="?page=1" class="page-link">&laquo; Первая</a>
-      <a href="?page={{ products.previous_page_number }}" class="page-link">&lsaquo; Предыдущая</a>
+<!-- Пагинация -->
+<div class="pagination">
+  {% if products.has_previous %}
+    <a href="?page=1" class="page-link">&laquo; Первая</a>
+    <a href="?page={{ products.previous_page_number }}" class="page-link">&lsaquo; Предыдущая</a>
+  {% endif %}
+
+  {% for num in page_range %}
+    {% if num == products.number %}
+      <a href="?page={{ num }}" class="page-link active">{{ num }}</a>
+    {% else %}
+      <a href="?page={{ num }}" class="page-link">{{ num }}</a>
     {% endif %}
+  {% endfor %}
 
-    {% for num in products.paginator.page_range %}
-      {% if products.number == num %}
-        <a href="?page={{ num }}" class="page-link active">{{ num }}</a>
-      {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
-        <a href="?page={{ num }}" class="page-link">{{ num }}</a>
-      {% endif %}
-    {% endfor %}
-
-    {% if products.has_next %}
-      <a href="?page={{ products.next_page_number }}" class="page-link">Следующая &rsaquo;</a>
-      <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
-    {% endif %}
-  </div>
+  {% if products.has_next %}
+    <a href="?page={{ products.next_page_number }}" class="page-link">Следующая &rsaquo;</a>
+    <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
+  {% endif %}
 </div>
 {% endblock %}

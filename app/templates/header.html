@@ -1,15 +1,24 @@
 {% load static %}
 <header>
-    <div class = "logo">
-        <a href = "{% url "index" %}">
-            <img src="{% static "img/logoWb.svg" %}" alt="logo">
+  <div class="logo">
+    <a href="{% url 'index' %}">
+      <img src="{% static 'img/logoWb.svg' %}" alt="Логотип">
+    </a>
+  </div>
+
+  <nav>
+    <div class="nav-links">
+      <div class="nav-link"><a href="{% url 'index' %}">Каталог</a></div>
+      <div class="nav-link"><a href="#">О нас</a></div>
+      <div class="nav-link"><a href="#">Контакты</a></div>
+
+      <!-- Ссылка на корзину -->
+      <div class="nav-link cart-link">
+        <a href="{% url 'cart_detail' %}">
+          <img src="{% static 'img/cart-icon.svg' %}" alt="Корзина" width="24" height="24">
+          <span id="cart-count">0</span> <!-- Счетчик товаров в корзине -->
         </a>
+      </div>
     </div>
-    <nav>
-        <div class="nav-links">
-            <div class="nav-link"><a href="nav-link">Каталог</a></div>
-            <div class="nav-link"><a href="nav-link">О нас</a></div>
-            <div class="nav-link"><a href="nav-link">Контакты</a></div>
-        </div>
-    </nav>
+  </nav>
 </header>
