@@ -1,6 +1,6 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 
-{% block title %}Главная{% endblock %} 
+{% block title %}Главная{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -21,29 +21,31 @@
         class="product-button"
         onclick="window.location.href='{% url 'product_details' product.id %}'"
       >
-        Купить
+        В корзину
       </button>
     </div>
     {% endfor %}
   </div>
 
-  <!-- Пагинация -->
+  <!-- Улучшенная пагинация с номерами страниц -->
   <div class="pagination">
-    <span class="step-links">
-      {% if products.has_previous %}
-        <a href="?page=1" class="page-link">&laquo; Первая</a>
-        <a href="?page={{ products.previous_page_number }}" class="page-link">Предыдущая</a>
-      {% endif %}
+    {% if products.has_previous %}
+      <a href="?page=1" class="page-link">&laquo; Первая</a>
+      <a href="?page={{ products.previous_page_number }}" class="page-link">&lsaquo; Предыдущая</a>
+    {% endif %}
 
-      <span class="current-page">
-        Страница {{ products.number }} из {{ products.paginator.num_pages }}
-      </span>
-
-      {% if products.has_next %}
-        <a href="?page={{ products.next_page_number }}" class="page-link">Следующая</a>
-        <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
+    {% for num in products.paginator.page_range %}
+      {% if products.number == num %}
+        <a href="?page={{ num }}" class="page-link active">{{ num }}</a>
+      {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-link">{{ num }}</a>
       {% endif %}
-    </span>
+    {% endfor %}
+
+    {% if products.has_next %}
+      <a href="?page={{ products.next_page_number }}" class="page-link">Следующая &rsaquo;</a>
+      <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
