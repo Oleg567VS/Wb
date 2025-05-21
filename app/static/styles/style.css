@@ -517,3 +517,20 @@ tfoot {
 .cart-item-link:hover {
   color: #1565c0;
 }
+/* === Кнопка "Очистить корзину" === */
+.cart-clear-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #d32f2f;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  margin-left: 10px;
+}
+
+.cart-clear-btn:hover {
+  background-color: #b71c1c;
+}

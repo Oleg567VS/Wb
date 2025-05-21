@@ -111,4 +111,23 @@ def cart_change_quantity(request, item_id):
         else:
             cart_item.delete()
     return redirect('cart_detail')
+def cart_clear(request):
+    cart = _get_or_create_cart(request)
+    cart.items.all().delete()  # Удаляем все элементы корзины
+    return redirect('cart_detail')
+from django.contrib import messages
+
+def order_create(request):
+    cart = _get_or_create_cart(request)
+
+    if cart.items.exists():
+        # Очищаем корзину
+        cart.items.all().delete()
+        
+        # Показываем сообщение об успехе
+        messages.success(request, "Ваш заказ успешно оформлен!")
+    else:
+        messages.warning(request, "Корзина пуста.")
+
+    return redirect('index')
 # Create your views here.
