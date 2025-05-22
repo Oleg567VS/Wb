@@ -20,7 +20,7 @@
       </a>
 
       <!-- Кнопка "В корзину" под карточкой -->
-      <a href="{% url 'cart_add' product.id %}" class="product-button">
+      <a href="#" class="product-button add-to-cart-btn" data-product-id="{{ product.id }}">
         В корзину
       </a>
     </div>
@@ -47,4 +47,61 @@
     <a href="?page={{ products.paginator.num_pages }}" class="page-link">Последняя &raquo;</a>
   {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const productId = btn.dataset.productId;
+      fetch(`/cart/add-ajax/${productId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken'),
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('cart-count').textContent = data.cart_count;
+        showCartMessage('Товар добавлен в корзину!');
+      });
+    });
+  });
+});
+
+function showCartMessage(msg) {
+  let el = document.getElementById('cart-message');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'cart-message';
+    el.style.position = 'fixed';
+    el.style.top = '20px';
+    el.style.right = '20px';
+    el.style.background = '#6c63ff';
+    el.style.color = '#fff';
+    el.style.padding = '12px 20px';
+    el.style.borderRadius = '8px';
+    el.style.zIndex = 1000;
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 1500);
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
 {% endblock %}

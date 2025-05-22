@@ -2,10 +2,74 @@
 {% block title %}Корзина{% endblock %}
 
 {% block content %}
+<style>
+.cart-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 32px 28px 24px 28px;
+}
+.cart-container h1 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.cart-container table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+.cart-container th, .cart-container td {
+  padding: 10px 8px;
+  text-align: center;
+}
+.cart-container th {
+  background: #f5f5f5;
+}
+.cart-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cart-item-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+.quantity-input {
+  width: 60px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  text-align: center;
+}
+.quantity-update-btn {
+  display: none;
+}
+.cart-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+.order-success {
+  color: #388e3c;
+  background: #e8f5e9;
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-size: 1.1em;
+}
+</style>
 <div class="cart-container">
     <h1>Корзина</h1>
-
+    <div id="cart-message"></div>
     {% if cart.items.exists %}
+        <form id="cart-form">
         <table>
             <thead>
                 <tr>
@@ -18,9 +82,8 @@
             </thead>
             <tbody>
                 {% for item in cart.items.all %}
-                    <tr>
+                    <tr data-item-id="{{ item.id }}">
                         <td>
-                            <!-- Мини-изображение + название -->
                             <div class="cart-item-info">
                                 <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-image">
                                 <span>{{ item.product.name }}</span>
@@ -28,41 +91,59 @@
                         </td>
                         <td>{{ item.product.price }} ₽</td>
                         <td>
-                            <form method="post" action="{% url 'cart_change_quantity' item.id %}">
-                                {% csrf_token %}
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                <button type="submit" class="quantity-update-btn">Обновить</button>
-                            </form>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input" data-item-id="{{ item.id }}">
                         </td>
-                        <td>{{ item.item_total }} ₽</td>
+                        <td class="item-total">{{ item.item_total }} ₽</td>
                         <td>
-                            <!-- Ссылка на страницу товара -->
-                            <a href="{% url 'product_details' item.product.id %}" class="cart-item-link">
-                                Подробнее
-                            </a>
-                            /
-                            <!-- Ссылка на удаление -->
-                            <a href="{% url 'cart_remove' item.id %}" class="remove-link" onclick="return confirm('Удалить?')">Удалить</a>
+                            <a href="{% url 'cart_remove' item.id %}" class="remove-link">Удалить</a>
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="4">Итого:</th>
-                <th>{{ cart.total_price }} ₽</th>
-              </tr>
-              <tr>
-                 <td colspan="5" style="text-align: right;">
-                  <a href="{% url 'cart_clear' %}" class="cart-clear-btn" onclick="return confirm('Вы уверены, что хотите удалить все товары?')">
-                     Очистить корзину
-                  </a>
-                </td>
-               </tr>
-            </tfoot>
         </table>
+        </form>
+        <div class="cart-actions">
+            <div style="font-weight:bold; font-size:1.1em;">Итого: <span id="cart-total">{{ cart.total_price }}</span> ₽</div>
+            <form action="{% url 'order_checkout' %}" method="get" id="checkout-form" style="display:inline;">
+                <button type="submit" style="background:#6c63ff;color:#fff;border:none;border-radius:6px;padding:10px 18px;font-size:1em;cursor:pointer;">Оформить заказ</button>
+            </form>
+            <form method="post" action="{% url 'cart_clear' %}" id="clear-form" style="display:inline; margin-left:10px;">
+                {% csrf_token %}
+                <button type="submit" style="background:#d32f2f;color:#fff;border:none;border-radius:6px;padding:10px 18px;font-size:1em;cursor:pointer;">Удалить всё</button>
+            </form>
+        </div>
     {% else %}
-        <p class="empty-cart">Корзина пуста.</p>
+        <p>Ваша корзина пуста.</p>
     {% endif %}
 </div>
+<script>
+// Автоматическое обновление количества товара
+const cartForm = document.getElementById('cart-form');
+if (cartForm) {
+  cartForm.addEventListener('input', function(e) {
+    if (e.target.classList.contains('quantity-input')) {
+      const itemId = e.target.dataset.itemId;
+      const quantity = e.target.value;
+      fetch(`/cart/change-quantity/${itemId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `quantity=${quantity}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Обновить сумму по товару
+        const row = document.querySelector(`tr[data-item-id='${itemId}']`);
+        if (row && data.item_total !== undefined) {
+          row.querySelector('.item-total').textContent = data.item_total + ' ₽';
+        }
+        // Обновить итоговую сумму
+        document.getElementById('cart-total').textContent = data.cart_total;
+      });
+    }
+  });
+}
+</script>
 {% endblock %}

@@ -38,20 +38,54 @@
    # return render(request, "app/product_details.html", context)
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Product, Cart, CartItem
+from .models import Product, Cart, CartItem, User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django import forms
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import authenticate
+from django.views.decorators.http import require_POST
+from django.contrib import messages
+from django.urls import reverse
 
 def _get_or_create_cart(request):
     if request.user.is_authenticated:
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        carts = Cart.objects.filter(user=request.user)
+        if carts.count() > 1:
+            # Оставить одну, остальные удалить
+            main_cart = carts.first()
+            for c in carts[1:]:
+                c.delete()
+            cart = main_cart
+            created = False
+        elif carts.exists():
+            cart = carts.first()
+            created = False
+        else:
+            cart = Cart.objects.create(user=request.user)
+            created = True
     else:
         session_key = request.session.session_key or request.session.create()
-        cart, created = Cart.objects.get_or_create(session_key=session_key)
+        carts = Cart.objects.filter(session_key=session_key, user__isnull=True)
+        if carts.count() > 1:
+            main_cart = carts.first()
+            for c in carts[1:]:
+                c.delete()
+            cart = main_cart
+            created = False
+        elif carts.exists():
+            cart = carts.first()
+            created = False
+        else:
+            cart = Cart.objects.create(session_key=session_key)
+            created = True
     return cart
 
 def index(request):
     products_list = Product.objects.all().order_by('id')
-    paginator = Paginator(products_list, 12)
+    paginator = Paginator(products_list, 10)
     page = request.GET.get('page')
 
     try:
@@ -101,6 +135,7 @@ def cart_remove(request, item_id):
     cart_item.delete()
     return redirect('cart_detail')
 
+@csrf_exempt
 def cart_change_quantity(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart=_get_or_create_cart(request))
     quantity = request.POST.get('quantity')
@@ -110,24 +145,134 @@ def cart_change_quantity(request, item_id):
             cart_item.save()
         else:
             cart_item.delete()
-    return redirect('cart_detail')
+    # AJAX: вернуть новую сумму и итог
+    cart = cart_item.cart
+    return JsonResponse({
+        'item_total': cart_item.item_total if cart_item.id else 0,
+        'cart_total': cart.total_price
+    })
+
 def cart_clear(request):
     cart = _get_or_create_cart(request)
     cart.items.all().delete()  # Удаляем все элементы корзины
     return redirect('cart_detail')
-from django.contrib import messages
 
+@login_required
 def order_create(request):
     cart = _get_or_create_cart(request)
-
     if cart.items.exists():
-        # Очищаем корзину
         cart.items.all().delete()
-        
-        # Показываем сообщение об успехе
         messages.success(request, "Ваш заказ успешно оформлен!")
     else:
         messages.warning(request, "Корзина пуста.")
+    return redirect('cart_detail')
 
-    return redirect('index')
+@login_required
+def order_checkout(request):
+    if not request.user.is_authenticated:
+        # Сохраняем возврат на оформление заказа после регистрации
+        return redirect(f"{reverse('register')}?next={reverse('order_checkout')}")
+    cart = _get_or_create_cart(request)
+    if not cart.items.exists():
+        messages.warning(request, "Корзина пуста.")
+        return redirect('cart_detail')
+    if request.method == "POST":
+        # Здесь можно добавить обработку формы заказа (например, адрес, телефон и т.д.)
+        cart.items.all().delete()
+        messages.success(request, "Ваш заказ успешно оформлен!")
+        return redirect('index')
+    return render(request, 'app/order_checkout.html', {'cart': cart})
+
+class CustomUserCreationForm(UserCreationForm):
+    phone_number = forms.CharField(max_length=20, required=False, label="Телефон")
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ("phone_number",)
+
+def register(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Перенос корзины после регистрации
+            _merge_guest_cart(request, user)
+            auth_login(request, user)
+            return redirect("index")
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "app/register.html", {"form": form})
+
+from django.contrib.auth.views import LoginView
+class CustomLoginView(LoginView):
+    template_name = "app/login.html"
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _merge_guest_cart(self.request, self.request.user)
+        return response
+
+def _merge_guest_cart(request, user):
+    session_key = request.session.session_key
+    if not session_key:
+        return
+    try:
+        guest_cart = Cart.objects.get(session_key=session_key, user__isnull=True)
+    except Cart.DoesNotExist:
+        return
+    user_cart, _ = Cart.objects.get_or_create(user=user)
+    for item in guest_cart.items.all():
+        user_item, created = CartItem.objects.get_or_create(cart=user_cart, product=item.product)
+        if not created:
+            user_item.quantity += item.quantity
+            user_item.save()
+        else:
+            user_item.quantity = item.quantity
+            user_item.save()
+    guest_cart.delete()
+
+def cart_context(request):
+    from .models import Cart
+    cart = None
+    if request.user.is_authenticated:
+        carts = Cart.objects.filter(user=request.user)
+        if carts.count() > 1:
+            main_cart = carts.first()
+            for c in carts[1:]:
+                c.delete()
+            cart = main_cart
+        elif carts.exists():
+            cart = carts.first()
+        else:
+            cart = Cart.objects.create(user=request.user)
+    else:
+        session_key = request.session.session_key or request.session.create()
+        carts = Cart.objects.filter(session_key=session_key, user__isnull=True)
+        if carts.count() > 1:
+            main_cart = carts.first()
+            for c in carts[1:]:
+                c.delete()
+            cart = main_cart
+        elif carts.exists():
+            cart = carts.first()
+        else:
+            cart = Cart.objects.create(session_key=session_key)
+    return {'cart': cart}
+
+@require_POST
+def cart_add_ajax(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    cart = _get_or_create_cart(request)
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
+    cart_count = cart.items.count()
+    cart_total = cart.total_price
+    return JsonResponse({
+        'cart_count': cart_count,
+        'cart_total': cart_total,
+        'item_id': cart_item.id,
+        'item_quantity': cart_item.quantity
+    })
+
 # Create your views here.

@@ -66,6 +66,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "app.views.cart_context",
             ],
         },
     },
@@ -132,3 +133,8 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "app.User"
+
+LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/login/"

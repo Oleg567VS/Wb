@@ -12,31 +12,17 @@
       {% endif %}
     {% endfor %}
   </div>
-
-  <!-- Основной блок с изображением и информацией -->
   <div class="product-main">
     <div class="product-image">
       <img src="{{ product.image.url }}" alt="{{ product.name }}">
     </div>
-
     <div class="product-info">
-      <!-- Цена -->
       <div class="product-price">{{ product.price }} ₽</div>
-
-      <!-- Название -->
       <h1 class="product-title">{{ product.name }}</h1>
-
-      <!-- Бренд -->
       <div class="product-brand">Бренд: <strong>{{ product.brand.name }}</strong></div>
-
-      <!-- Кнопка добавить в корзину -->
-      <a href="{% url 'cart_add' product.id %}" class="product-button">
-        В корзину
-      </a>
+      <a href="{% url 'cart_add' product.id %}" class="product-button">В корзину</a>
     </div>
   </div>
-
-  <!-- Описание товара -->
   <div class="product-description">
     <h2>Описание</h2>
     <p>{{ product.desc }}</p>
