@@ -10,6 +10,11 @@
       <div>
         {{ field.label_tag }}<br>
         {{ field }}
+        {% if field.name == 'password' or field.name == 'password1' or field.name == 'password2' %}
+          <label style="font-size:0.95em;">
+            <input type="checkbox" onclick="togglePassword(this, '{{ field.id_for_label }}')"> Показать пароль
+          </label>
+        {% endif %}
         {% if field.errors %}
           <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
         {% endif %}
@@ -21,4 +26,12 @@
     Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
   </div>
 </div>
+<script>
+function togglePassword(checkbox, inputId) {
+  var input = document.getElementById(inputId);
+  if (input) {
+    input.type = checkbox.checked ? 'text' : 'password';
+  }
+}
+</script>
 {% endblock %} 

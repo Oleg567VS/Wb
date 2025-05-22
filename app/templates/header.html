@@ -16,7 +16,7 @@
       <div class="nav-link cart-link">
         <a href="{% url 'cart_detail' %}">
           <img src="{% static 'img/cart-icon.svg' %}" alt="Корзина" width="24" height="24">
-          <span id="cart-count">{{ cart.items.count|default:0 }}</span>
+          <span id="cart-count">{{ cart_total_quantity|default:0 }}</span>
         </a>
       </div>
 
@@ -27,8 +27,8 @@
           <button type="submit" style="background:none;border:none;color:#6c63ff;cursor:pointer;padding:0;font:inherit;">Выйти</button>
         </form>
       {% else %}
-        <a href="{% url 'login' %}">Войти</a>
-        <a href="{% url 'register' %}">Регистрация</a>
+        <a class="header-auth-link" href="{% url 'login' %}">Войти</a>
+        <a class="header-auth-link" href="{% url 'register' %}">Регистрация</a>
       {% endif %}
     </div>
   </nav>

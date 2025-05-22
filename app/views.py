@@ -170,14 +170,13 @@ def order_create(request):
 @login_required
 def order_checkout(request):
     if not request.user.is_authenticated:
-        # Сохраняем возврат на оформление заказа после регистрации
-        return redirect(f"{reverse('register')}?next={reverse('order_checkout')}")
+        # Перенаправить на страницу входа, после входа вернуть в корзину
+        return redirect(f"{reverse('login')}?next={reverse('cart_detail')}")
     cart = _get_or_create_cart(request)
     if not cart.items.exists():
         messages.warning(request, "Корзина пуста.")
         return redirect('cart_detail')
     if request.method == "POST":
-        # Здесь можно добавить обработку формы заказа (например, адрес, телефон и т.д.)
         cart.items.all().delete()
         messages.success(request, "Ваш заказ успешно оформлен!")
         return redirect('index')
@@ -233,6 +232,7 @@ def _merge_guest_cart(request, user):
 def cart_context(request):
     from .models import Cart
     cart = None
+    cart_total_quantity = 0
     if request.user.is_authenticated:
         carts = Cart.objects.filter(user=request.user)
         if carts.count() > 1:
@@ -256,7 +256,9 @@ def cart_context(request):
             cart = carts.first()
         else:
             cart = Cart.objects.create(session_key=session_key)
-    return {'cart': cart}
+    if cart:
+        cart_total_quantity = sum(item.quantity for item in cart.items.all())
+    return {'cart': cart, 'cart_total_quantity': cart_total_quantity}
 
 @require_POST
 def cart_add_ajax(request, product_id):
@@ -268,9 +270,11 @@ def cart_add_ajax(request, product_id):
         cart_item.save()
     cart_count = cart.items.count()
     cart_total = cart.total_price
+    cart_total_quantity = sum(item.quantity for item in cart.items.all())
     return JsonResponse({
         'cart_count': cart_count,
         'cart_total': cart_total,
+        'cart_total_quantity': cart_total_quantity,
         'item_id': cart_item.id,
         'item_quantity': cart_item.quantity
     })

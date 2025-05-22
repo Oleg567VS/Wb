@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(response => response.json())
       .then(data => {
-        document.getElementById('cart-count').textContent = data.cart_count;
+        document.getElementById('cart-count').textContent = data.cart_total_quantity;
         showCartMessage('Товар добавлен в корзину!');
       });
     });

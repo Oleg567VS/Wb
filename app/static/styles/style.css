@@ -44,6 +44,25 @@ nav .nav-links .nav-link a {
   text-transform: uppercase;
 }
 
+nav .nav-links .header-auth-link {
+  color: #fff !important;
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s;
+}
+
+nav .nav-links .header-auth-link:hover {
+  color: #e212e5 !important;
+  background: #fff;
+  border-radius: 6px;
+}
+
 /* === Контейнер товаров === */
 .products {
   background-color: #ffffff;
@@ -637,4 +656,23 @@ tfoot {
 }
 .order-checkout-container button:hover {
   background: #554ee0;
+}
+
+.header-auth-link {
+  color: #fff !important;
+  background: none;
+  border: none;
+  font-size: 30px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: color 0.2s;
+}
+
+.header-auth-link:hover {
+  color: #e212e5;
+  background: #fff;
+  border-radius: 6px;
 }
