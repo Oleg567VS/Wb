@@ -21,10 +21,10 @@
       </div>
 
       {% if user.is_authenticated %}
-        <span>Привет, {{ user.username }}!</span>
+        <span class="user1234">Привет, {{ user.username }}!</span>
         <form action="{% url 'logout' %}" method="post" style="display:inline;">
           {% csrf_token %}
-          <button type="submit" style="background:none;border:none;color:#6c63ff;cursor:pointer;padding:0;font:inherit;">Выйти</button>
+          <button type="submit" class="frgtg">Выйти</button>
         </form>
       {% else %}
         <a class="header-auth-link" href="{% url 'login' %}">Войти</a>
